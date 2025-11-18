@@ -107,12 +107,12 @@ export async function saveStravaToken(
 ) {
   await sql`
     INSERT INTO strava_tokens (user_id, access_token, refresh_token, expires_at)
-    VALUES (${userId}, ${accessToken}, ${refreshToken}, ${expiresAt})
+    VALUES (${userId}, ${accessToken}, ${refreshToken}, ${expiresAt.toISOString()})
     ON CONFLICT (user_id)
     DO UPDATE SET
       access_token = EXCLUDED.access_token,
       refresh_token = EXCLUDED.refresh_token,
-      expires_at = EXCLUDED.expires_at,
+      expires_at = ${expiresAt.toISOString()},
       updated_at = NOW()
   `;
 }
@@ -140,7 +140,7 @@ export async function saveActivity(activity: {
       ${activity.userId},
       ${activity.source},
       ${activity.type},
-      ${activity.date},
+      ${activity.date.toISOString()},
       ${activity.duration},
       ${activity.distance || null},
       ${activity.metadata ? JSON.stringify(activity.metadata) : null}
@@ -166,14 +166,14 @@ export async function getActivities(
   if (startDate) {
     query = sql`
       ${query}
-      AND date >= ${startDate}
+      AND date >= ${startDate.toISOString()}
     `;
   }
 
   if (endDate) {
     query = sql`
       ${query}
-      AND date <= ${endDate}
+      AND date <= ${endDate.toISOString()}
     `;
   }
 
