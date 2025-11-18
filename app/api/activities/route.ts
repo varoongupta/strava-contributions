@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { getActivities } from '@/lib/db';
 import { deduplicateActivities } from '@/lib/deduplication';
 import { subYears } from 'date-fns';
+import type { Activity } from '@/types/activity';
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,11 +28,11 @@ export async function GET(request: NextRequest) {
     const activities = await getActivities(userId, startDate, endDate);
 
     // Convert date strings to Date objects
-    const activitiesWithDates = activities.map((activity) => ({
+    const activitiesWithDates: Activity[] = activities.map((activity) => ({
       ...activity,
       date: new Date(activity.date),
       created_at: new Date(activity.created_at),
-    }));
+    })) as Activity[];
 
     // Deduplicate activities
     const { activities: deduplicated, duplicatesRemoved } = deduplicateActivities(
