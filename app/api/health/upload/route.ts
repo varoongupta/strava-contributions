@@ -45,10 +45,10 @@ export async function POST(request: NextRequest) {
       workoutsParsed: workouts.length,
       activitiesSaved: savedCount,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error processing Apple Health upload:', error);
     return NextResponse.json(
-      { error: 'Failed to process health data' },
+      { error: error.message || 'Failed to process health data' },
       { status: 500 }
     );
   }

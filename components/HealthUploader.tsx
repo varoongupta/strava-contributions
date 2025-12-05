@@ -54,15 +54,15 @@ export default function HealthUploader() {
         Upload Apple Health Data
       </h3>
       <p className="text-sm text-gray-600 mb-4">
-        Export your Apple Health data from the Health app (Settings → Health → Export Health Data),
-        then upload the ZIP file here.
+        Export your Apple Health data from the Health app (Settings → Health → Export Health Data).
+        You can upload either the ZIP file or extract and upload the export.xml file directly.
       </p>
 
       <div className="space-y-3">
         <input
           ref={fileInputRef}
           type="file"
-          accept=".zip"
+          accept=".zip,.xml"
           onChange={handleFileSelect}
           disabled={isUploading}
           className="block w-full text-sm text-gray-500

@@ -3,20 +3,43 @@ import Strava from '@/lib/strava-provider';
 import { createUser, getUserByEmail } from '@/lib/db';
 import { saveStravaToken } from '@/lib/db';
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Strava({
-      clientId: process.env.STRAVA_CLIENT_ID!,
-      clientSecret: process.env.STRAVA_CLIENT_SECRET!,
+if (!process.env.AUTH_SECRET) {
+  throw new Error('AUTH_SECRET is not set');
+}
+
+if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
+  console.warn('Strava credentials not set - OAuth will not work');
+}
+
+// Initialize provider separately to catch any errors
+let stravaProvider;
+try {
+  if (process.env.STRAVA_CLIENT_ID && process.env.STRAVA_CLIENT_SECRET) {
+    stravaProvider = Strava({
+      clientId: process.env.STRAVA_CLIENT_ID,
+      clientSecret: process.env.STRAVA_CLIENT_SECRET,
       authorization: {
         params: {
           scope: 'activity:read_all',
         },
       },
-    }),
-  ],
-  callbacks: {
-    async signIn({ user, account, profile }) {
+    });
+    console.log('Strava provider initialized successfully');
+  }
+} catch (error: any) {
+  console.error('Error initializing Strava provider:', error);
+  console.error('Error stack:', error.stack);
+}
+
+let nextAuthConfig;
+try {
+  nextAuthConfig = {
+    secret: process.env.AUTH_SECRET,
+    trustHost: true,
+    debug: process.env.NODE_ENV === 'development',
+    providers: stravaProvider ? [stravaProvider] : [],
+    callbacks: {
+      async signIn({ user, account, profile }) {
       if (account?.provider === 'strava' && account.access_token && account.refresh_token) {
         try {
           // Get or create user
@@ -64,9 +87,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
-  },
-  pages: {
-    signIn: '/',
+    },
+    pages: {
+      signIn: '/',
+    },
+  };
+  console.log('NextAuth config created with', nextAuthConfig.providers.length, 'providers');
+} catch (error: any) {
+  console.error('Error creating NextAuth config:', error);
+  throw error;
+}
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...nextAuthConfig,
+  // Force disable PKCE globally if needed
+  experimental: {
+    enableWebAuthn: false,
   },
 });
 

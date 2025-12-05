@@ -27,17 +27,50 @@ function mapHealthActivityType(healthType: string): ActivityType | null {
 export async function parseAppleHealthExport(
   file: File
 ): Promise<AppleHealthWorkout[]> {
-  const zip = new JSZip();
-  const zipData = await file.arrayBuffer();
-  await zip.loadAsync(zipData);
+  // Check if it's an XML file or ZIP file
+  const isZip = file.name.endsWith('.zip') || file.type === 'application/zip';
+  const isXml = file.name.endsWith('.xml') || file.type === 'application/xml' || file.type === 'text/xml';
 
-  // Find export.xml in the zip
-  const exportFile = zip.file('export.xml');
-  if (!exportFile) {
-    throw new Error('export.xml not found in the uploaded file');
+  let xmlContent: string;
+
+  if (isXml) {
+    // Direct XML file upload
+    xmlContent = await file.text();
+  } else if (isZip) {
+    // ZIP file - search for export.xml recursively
+    const zip = new JSZip();
+    const zipData = await file.arrayBuffer();
+    await zip.loadAsync(zipData);
+
+    // Search for export.xml in the zip (could be at root or nested)
+    let exportFile = zip.file('export.xml');
+    
+    // If not found at root, search recursively
+    if (!exportFile) {
+      // Get all files in the zip
+      const allFiles = Object.keys(zip.files);
+      
+      // Look for export.xml in any path
+      const exportPath = allFiles.find(path => 
+        path.endsWith('export.xml') && !path.includes('__MACOSX')
+      );
+      
+      if (exportPath) {
+        exportFile = zip.file(exportPath);
+      }
+    }
+
+    if (!exportFile) {
+      // Log available files for debugging
+      const allFiles = Object.keys(zip.files);
+      console.error('Available files in zip:', allFiles);
+      throw new Error('export.xml not found in the uploaded ZIP file. Please ensure the ZIP contains export.xml');
+    }
+
+    xmlContent = await exportFile.async('string');
+  } else {
+    throw new Error('Unsupported file type. Please upload a ZIP file or XML file.');
   }
-
-  const xmlContent = await exportFile.async('string');
 
   // Parse XML
   const parser = new XMLParser({
@@ -111,5 +144,20 @@ export function convertHealthWorkoutToActivity(
       originalType: workout.type,
     },
   };
+}
+
+// Format Apple Health type name for display
+export function formatHealthTypeName(healthType: string): string {
+  // Remove HKWorkoutActivityType prefix
+  let name = healthType.replace(/^HKWorkoutActivityType/, '');
+  
+  // Convert camelCase to Title Case
+  name = name.replace(/([A-Z])/g, ' $1').trim();
+  
+  // Handle common abbreviations
+  name = name.replace(/\bHIIT\b/gi, 'HIIT');
+  name = name.replace(/\bPilates\b/gi, 'Pilates');
+  
+  return name || healthType;
 }
 

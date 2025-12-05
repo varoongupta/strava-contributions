@@ -7,15 +7,26 @@ import ActivityHeatmap from '@/components/ActivityHeatmap';
 import ActivityStats from '@/components/ActivityStats';
 import DataSourceManager from '@/components/DataSourceManager';
 import HealthUploader from '@/components/HealthUploader';
+import ShareableGenerator from '@/components/ShareableGenerator';
 import type { Activity } from '@/types/activity';
 
 interface Stats {
-  totalActivities: number;
-  totalDuration: number;
-  totalDistance: number;
-  activeDays: number;
-  firstActivity: string | null;
-  lastActivity: string | null;
+  year: {
+    totalActivities: number;
+    totalDuration: number;
+    totalDistance: number;
+    activeDays: number;
+    firstActivity: string | null;
+    lastActivity: string | null;
+  };
+  allTime: {
+    totalActivities: number;
+    totalDuration: number;
+    totalDistance: number;
+    activeDays: number;
+    firstActivity: string | null;
+    lastActivity: string | null;
+  };
 }
 
 export default function Dashboard() {
@@ -110,16 +121,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Data Sources */}
-        <div className="mb-8">
-          <DataSourceManager />
-        </div>
-
-        {/* Apple Health Uploader */}
-        <div className="mb-8">
-          <HealthUploader />
-        </div>
-
         {/* Heatmap */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
           <h2 className="text-xl font-bold mb-4 text-gray-900">
@@ -135,6 +136,45 @@ export default function Dashboard() {
               </p>
             </div>
           )}
+        </div>
+
+        {/* Shareable Generator */}
+        {stats && stats.year.totalActivities > 0 && (
+          <div className="mb-8">
+            <ShareableGenerator />
+          </div>
+        )}
+
+        {/* Data Sources */}
+        <div className="mb-8">
+          <DataSourceManager />
+        </div>
+
+        {/* Apple Health Uploader */}
+        <div className="mb-8">
+          <HealthUploader />
+        </div>
+
+        {/* Race Training Planner */}
+        <div className="mb-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold mb-2 text-gray-900">
+                  Race Training Planner
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  Get a personalized training plan based on your running history
+                </p>
+              </div>
+              <button
+                disabled
+                className="px-6 py-3 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed opacity-60"
+              >
+                Coming Soon
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
