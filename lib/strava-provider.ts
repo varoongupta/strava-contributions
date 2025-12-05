@@ -36,7 +36,7 @@ export default function Strava(
     },
     token: {
       url: 'https://www.strava.com/api/v3/oauth/token',
-      async request(context) {
+      async request(context: any) {
         console.log('=== CUSTOM TOKEN REQUEST CALLED ===');
         const { provider, params } = context;
         const redirectUri = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/callback/strava`;

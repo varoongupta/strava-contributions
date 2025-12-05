@@ -39,7 +39,7 @@ try {
     debug: process.env.NODE_ENV === 'development',
     providers: stravaProvider ? [stravaProvider] : [],
     callbacks: {
-      async signIn({ user, account, profile }) {
+      async signIn({ user, account, profile }: { user: any; account?: any; profile?: any }) {
       if (account?.provider === 'strava' && account.access_token && account.refresh_token) {
         try {
           // Get or create user
@@ -78,7 +78,7 @@ try {
       }
       return true;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token?: any }) {
       if (session.user?.email) {
         const user = await getUserByEmail(session.user.email);
         if (user) {
